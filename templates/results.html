@@ -7,243 +7,107 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
-    body {
-      font-family: 'Courier New', Courier, monospace;
-      background-color: #0d0d0d;
-      color: #e6e6e6;
-      margin: 0;
-      padding: 20px;
-    }
-    h1 {
-      color: #E41C38;
-      text-align: center;
-      text-transform: uppercase;
-    }
-    .logo {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .logo img {
-      max-width: 150px;
-      opacity: 0.9;
-      filter: drop-shadow(0 0 10px #E41C38) drop-shadow(0 0 5px #E41C38);
-      transition: all 0.3s ease;
-    }
-    .logo img:hover {
-      opacity: 1;
-      filter: drop-shadow(0 0 15px #E41C38) drop-shadow(0 0 20px #E41C38);
-    }
-
-    .results-container {
-        background-color: #1a1a1a;
-        padding: 20px;
-        border-radius: 10px;
-        width: 80%;
-        margin: auto;
-        box-shadow: 0 0 15px #E41C38;
-    }
-
-    .results-section {
-        background-color: #262626;
-        padding: 15px;
-        margin-bottom: 20px;
-        border-left: 5px solid #E41C38;
-        border-radius: 8px;
-        font-size: 16px;
-        box-shadow: 0 0 10px #E41C38;
-    }
-
-    .section-header {
-        background-color: #E41C38;
-        color: black;
-        padding: 10px;
-        text-transform: uppercase;
-        text-align: center;
-        font-weight: bold;
-        border-radius: 5px;
-        font-size: 1.2rem;
-    }
-
-    /* Fixes the centering issue */
-    .fixed-width-results {
-        font-family: monospace;
-        white-space: pre-wrap; /* Ensures proper formatting */
-        text-align: left;
-        background-color: #000;
-        color: #e6e6e6;
-        padding: 15px;
-        border-radius: 5px;
-        border-left: 3px solid #E41C38;
-        overflow-x: auto; /* Adds horizontal scrolling if needed */
-    }
-
-    .section-header {
-      background-color: #E41C38;
-      color: black;
-      padding: 10px;
-      cursor: pointer;
-      text-transform: uppercase;
-      text-align: center;
-      font-weight: bold;
-      border-radius: 5px;
-      margin-bottom: 10px;
-    }
-    .collapsible-content {
-      display: block;
-      background-color: #1a1a1a;
-      padding: 20px;
-      margin-bottom: 20px;
-      border-radius: 5px;
-      box-shadow: 0 4px 8px rgba(255, 0, 77, 0.5);
-    }
-    .collapsible-content pre {
-      background-color: #262626;
-      padding: 15px;
-      border-left: 5px solid #E41C38;
-      white-space: pre-wrap;
-      overflow-x: auto;
-      border-radius: 8px;
-      font-size: 14px;
-    }
-    .section-header:hover {
-      background-color: #ff4d4d;
-    }
-    .button-container {
-      text-align: center;
-      margin-top: 20px;
-    }
-    .button {
-      background-color: #E41C38;
-      color: black;
-      border: none;
-      padding: 10px 20px;
-      font-size: 16px;
-      text-transform: uppercase;
-      cursor: pointer;
-      border-radius: 5px;
-      margin: 5px;
-      transition: background-color 0.3s ease;
-    }
-    .button:hover {
-      background-color: #ff4d4d;
-    }
+    body { font-family: 'Courier New', Courier, monospace; background-color: #0d0d0d; color: #e6e6e6; margin: 0; padding: 20px; }
+    h1 { color: #E41C38; text-align: center; text-transform: uppercase; }
+    .logo { text-align: center; margin-bottom: 20px; }
+    .logo img { max-width: 150px; opacity: 0.9; filter: drop-shadow(0 0 10px #E41C38) drop-shadow(0 0 5px #E41C38); transition: all 0.3s ease; }
+    .logo img:hover { opacity: 1; filter: drop-shadow(0 0 15px #E41C38) drop-shadow(0 0 20px #E41C38); }
+    .section-header { background-color: #E41C38; color: black; padding: 10px; cursor: pointer; text-transform: uppercase; text-align: center; font-weight: bold; border-radius: 5px; margin-bottom: 10px; }
+    .collapsible-content { display: block; background-color: #1a1a1a; padding: 20px; margin-bottom: 20px; border-radius: 5px; box-shadow: 0 4px 8px rgba(255, 0, 77, 0.5); }
+    .collapsible-content pre { background-color: #262626; padding: 15px; border-left: 5px solid #E41C38; white-space: pre-wrap; overflow-x: auto; border-radius: 8px; font-size: 14px; }
+    .button-container { text-align: center; margin-top: 20px; }
+    .button { background-color: #E41C38; color: black; border: none; padding: 10px 20px; font-size: 16px; text-transform: uppercase; cursor: pointer; border-radius: 5px; margin: 5px; transition: background-color 0.3s ease; }
+    .button:hover { background-color: #ff4d4d; }
   </style>
 </head>
 <body>
 
-  <!-- Logo Section -->
   <div class="logo">
     <img src="{{ url_for('static', filename='HexxedBitHeadz-Logo.png') }}" alt="Hexxed BitHeadz Logo">
   </div>
 
   <h1>Scan Results</h1>
 
-  <!-- ClamAV Results -->
   <div class="section-header" onclick="toggleSection('clamav')">ClamAV Results</div>
   <div id="clamav" class="collapsible-content">
       <pre>{{ clamav_result }}</pre>
   </div>
 
-  <!-- YARA Results -->
   <div class="section-header" onclick="toggleSection('yara')">YARA Results</div>
   <div id="yara" class="collapsible-content">
       <pre>
-      {% if yara_result and yara_result|length > 0 %}
-      Matched Rules:
       {% for match in yara_result %}
       - {{ match }}
       {% endfor %}
-      {% else %}
-      No matches found.
-      {% endif %}
       </pre>
   </div>
 
-  {% if not oletools_result %}
-  <!-- CAPA Results (Only show if not an Office file) -->
   <div class="section-header" onclick="toggleSection('capa')">CAPA Results</div>
   <div id="capa" class="collapsible-content">
       <pre>{{ capa_result }}</pre>
   </div>
-  {% endif %}
-  
 
-  <!-- OLETools Results -->
   <div class="section-header" onclick="toggleSection('oletools')">OLETools Results</div>
   <div id="oletools" class="collapsible-content">
-      <pre class="fixed-width-results">{{ oletools_result }}</pre>
+      <pre>{{ oletools_result }}</pre>
   </div>
 
+  {% if macro_graph_path %}
   <div class="section-header" onclick="toggleSection('macrograph')">Macro Execution Flow</div>
   <div id="macrograph" class="collapsible-content">
-      <img src="{{ url_for('static', filename='macro_graph.png') }}" alt="Macro Execution Graph">
+      <img src="{{ macro_graph_path }}" alt="Macro Execution Graph">
   </div>
-
+  {% endif %}
 
   <div class="section-header" onclick="toggleSection('payloads')">Extracted Payloads</div>
   <div id="payloads" class="collapsible-content">
-      <pre>{{ extracted_payloads }}</pre>
+      <pre>
+      {% for payload in extracted_payloads %}
+      {{ payload }}
+      {% endfor %}
+      </pre>
   </div>
 
-  <!-- Buttons -->
   <div class="button-container">
     <button id="downloadPdfBtn" class="button">Download PDF Report</button>
     <button id="scanNewFileBtn" class="button">Scan New File</button>
-</div>
-
+  </div>
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    // Ensure elements exist before adding event listeners
     const downloadButton = document.getElementById("downloadPdfBtn");
     const scanNewFileButton = document.getElementById("scanNewFileBtn");
 
-    if (downloadButton) {
-      downloadButton.addEventListener("click", downloadReport);
-    }
+    if (downloadButton) downloadButton.addEventListener("click", downloadReport);
+    if (scanNewFileButton) scanNewFileButton.addEventListener("click", () => window.location.href = '/');
 
-    if (scanNewFileButton) {
-      scanNewFileButton.addEventListener("click", scanNewFile);
-    }
-
-    // Toggle collapsible sections
     function toggleSection(sectionId) {
       const content = document.getElementById(sectionId);
       content.style.display = content.style.display === 'block' ? 'none' : 'block';
     }
 
-    // Ensure jsPDF and html2canvas are properly loaded before running
     function downloadReport() {
-      setTimeout(() => {  // Delay execution to ensure libraries load
+      setTimeout(() => {
         if (!window.jspdf || !window.html2canvas) {
           alert("Error: PDF libraries not loaded. Try again in a few seconds.");
           return;
         }
-
         const { jsPDF } = window.jspdf;
-
         html2canvas(document.body, { scale: 2 }).then(canvas => {
           const pdf = new jsPDF('p', 'mm', 'a4');
           const imgData = canvas.toDataURL('image/png');
-
           const pdfWidth = pdf.internal.pageSize.getWidth();
           const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-
           pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
           pdf.save('scan_results.pdf');
         }).catch(error => {
           console.error('Error generating PDF:', error);
           alert("An error occurred while generating the PDF.");
         });
-      }, 1000); // 1-second delay
-    }
-
-    // Redirect to the upload page
-    function scanNewFile() {
-      window.location.href = '/';
+      }, 1000);
     }
   });
 </script>
- 
+
 </body>
 </html>
