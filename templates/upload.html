@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyberpunk File Scanner</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap">
+    <style>
+        body {
+            font-family: 'Orbitron', sans-serif;
+            background-color: #0d0d0d;
+            color: #e6e6e6;
+            text-align: center;
+            padding: 50px;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .logo img {
+            max-width: 150px;
+            opacity: 0.9;
+            filter: drop-shadow(0 0 10px #E41C38) drop-shadow(0 0 5px #E41C38);
+            transition: all 0.3s ease;
+        }
+        .logo img:hover {
+            opacity: 1;
+            filter: drop-shadow(0 0 15px #E41C38) drop-shadow(0 0 20px #E41C38);
+        }
+
+        .upload-container {
+            margin: auto;
+            width: 60%;
+            padding: 20px;
+            background: #1a1a1a;
+            border-radius: 10px;
+            box-shadow: 0 0 20px #E41C38;
+        }
+
+        .upload-box {
+            border: 2px dashed #E41C38;
+            padding: 30px;
+            background-color: #1a1a1a;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.2rem;
+            transition: all 0.3s ease-in-out;
+            cursor: pointer;
+        }
+
+        .upload-box:hover {
+            background-color: #2a2a2a;
+            border-color: #ff4d4d;
+            box-shadow: 0 0 10px #E41C38;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .neon-button {
+            background-color: #E41C38;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 20px;
+            transition: all 0.3s ease-in-out;
+            text-transform: uppercase;
+            border-radius: 10px;
+            box-shadow: 0 0 10px #E41C38, 0 0 40px #E41C38;
+        }
+
+        .neon-button:hover {
+            background-color: #ff4d4d;
+            box-shadow: 0 0 15px #ff4d4d, 0 0 50px #ff4d4d;
+            transform: scale(1.05);
+        }
+
+        .loading-container {
+            text-align: center;
+            margin-top: 20px;
+            color: #E41C38;
+            font-size: 1.5rem;
+            display: none;
+        }
+
+        .loading-bar {
+            width: 80%;
+            height: 5px;
+            background: linear-gradient(90deg, #E41C38, #ff4d4d);
+            animation: cyber-glow 1s infinite alternate;
+            border-radius: 5px;
+            margin: auto;
+        }
+
+        @keyframes cyber-glow {
+            from { box-shadow: 0 0 5px #E41C38; }
+            to { box-shadow: 0 0 20px #ff4d4d; }
+        }
+    </style>
+</head>
+<body>
+    <div class="logo">
+        <img src="static/HexxedBitHeadz-Logo.png" alt="HexxedBitHeadz Logo">
+    </div>
+    <h1>File Scanner</h1>
+    <div class="upload-container">
+
+    <form id="uploadForm" action="/" method="post" enctype="multipart/form-data">
+      <div class="upload-box" id="drop-area">
+          <p>Drag & Drop a File Here</p>
+          <input type="file" name="file" id="fileInput">
+      </div>
+      <button class="neon-button" type="submit">Upload & Analyze</button>
+  </form>
+  
+    <div id="loading-bar" class="loading-container">
+        <p>Analyzing File...</p>
+        <div class="loading-bar"></div>
+    </div>
+    
+    <script>
+      const dropArea = document.getElementById('drop-area');
+      const fileInput = document.getElementById('fileInput');
+      const uploadForm = document.getElementById('uploadForm');
+      const loadingBar = document.getElementById('loading-bar');
+  
+      // Prevent default browser behavior
+      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+          dropArea.addEventListener(eventName, (e) => e.preventDefault(), false);
+          document.body.addEventListener(eventName, (e) => e.preventDefault(), false);
+      });
+  
+      dropArea.addEventListener('dragover', () => {
+          dropArea.style.backgroundColor = "#2a2a2a"; // Highlight effect
+      });
+  
+      dropArea.addEventListener('dragleave', () => {
+          dropArea.style.backgroundColor = "#1a1a1a"; // Reset color
+      });
+  
+      dropArea.addEventListener('drop', (e) => {
+          e.preventDefault();
+          if (e.dataTransfer.files.length > 0) {
+              fileInput.files = e.dataTransfer.files;
+              dropArea.innerHTML = `<p>File Selected: ${fileInput.files[0].name}</p>`;
+          }
+      });
+  
+      dropArea.addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', () => {
+          dropArea.innerHTML = `<p>File Selected: ${fileInput.files[0].name}</p>`;
+      });
+  
+      uploadForm.addEventListener('submit', (e) => {
+          e.preventDefault(); // Stop default form submission
+  
+          if (fileInput.files.length === 0) {
+              alert("Please select a file before uploading.");
+              return;
+          }
+  
+          const formData = new FormData();
+          formData.append("file", fileInput.files[0]); // Attach file properly
+  
+          loadingBar.style.display = 'block'; // Show loading animation
+  
+          fetch("/", {
+              method: "POST",
+              body: formData
+          })
+          .then(response => response.text()) // Get response as text
+          .then(data => {
+              loadingBar.style.display = 'none'; // Hide loading bar
+              document.body.innerHTML = data; // Show response
+          })
+          .catch(error => {
+              console.error("Upload error:", error);
+              loadingBar.style.display = 'none';
+          });
+      });
+  </script>
+
+</body>
+</html>
