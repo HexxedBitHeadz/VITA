@@ -100,8 +100,23 @@
             from { box-shadow: 0 0 5px #E41C38; }
             to { box-shadow: 0 0 20px #ff4d4d; }
         }
+
+        .progress-bar {
+            width: 100%;
+            background-color: #1a1a1a;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        .progress {
+            width: 0;
+            height: 20px;
+            background-color: #E41C38;
+            border-radius: 5px;
+            transition: width 0.3s ease;
+        }
     </style>
-</head>
+
 <body>
     <div class="logo">
         <img src="static/HexxedBitHeadz-Logo.png" alt="HexxedBitHeadz Logo">
@@ -114,8 +129,10 @@
           <p>Drag & Drop a File Here</p>
           <input type="file" name="file" id="fileInput">
       </div>
-      <button class="neon-button" type="submit">Upload & Analyze</button>
-  </form>
+      <div class="progress-bar">
+        <div id="progress" class="progress"></div>
+      </div>
+    </form>
   
     <div id="loading-bar" class="loading-container">
         <p>Analyzing File...</p>
@@ -125,64 +142,56 @@
     <script>
       const dropArea = document.getElementById('drop-area');
       const fileInput = document.getElementById('fileInput');
-      const uploadForm = document.getElementById('uploadForm');
       const loadingBar = document.getElementById('loading-bar');
-  
-      // Prevent default browser behavior
+      const uploadForm = document.getElementById('uploadForm');
+
       ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
           dropArea.addEventListener(eventName, (e) => e.preventDefault(), false);
           document.body.addEventListener(eventName, (e) => e.preventDefault(), false);
       });
-  
+
       dropArea.addEventListener('dragover', () => {
-          dropArea.style.backgroundColor = "#2a2a2a"; // Highlight effect
+          dropArea.style.backgroundColor = "#2a2a2a";
       });
-  
+
       dropArea.addEventListener('dragleave', () => {
-          dropArea.style.backgroundColor = "#1a1a1a"; // Reset color
+          dropArea.style.backgroundColor = "#1a1a1a";
       });
-  
+
       dropArea.addEventListener('drop', (e) => {
           e.preventDefault();
           if (e.dataTransfer.files.length > 0) {
-              fileInput.files = e.dataTransfer.files;
-              dropArea.innerHTML = `<p>File Selected: ${fileInput.files[0].name}</p>`;
+              const file = e.dataTransfer.files[0];
+              const formData = new FormData();
+              formData.append("file", file);
+
+              loadingBar.style.display = 'block';
+
+              fetch("/", {
+                  method: "POST",
+                  body: formData
+              })
+              .then(response => response.text())
+              .then(data => {
+                  document.open();
+                  document.write(data);
+                  document.close();
+              })
+              .catch(error => console.error("Upload error:", error))
+              .finally(() => {
+                  loadingBar.style.display = 'none';
+              });
           }
       });
-  
+
       dropArea.addEventListener('click', () => fileInput.click());
       fileInput.addEventListener('change', () => {
-          dropArea.innerHTML = `<p>File Selected: ${fileInput.files[0].name}</p>`;
-      });
-  
-      uploadForm.addEventListener('submit', (e) => {
-          e.preventDefault(); // Stop default form submission
-  
-          if (fileInput.files.length === 0) {
-              alert("Please select a file before uploading.");
-              return;
+          if (fileInput.files.length > 0) {
+              loadingBar.style.display = 'block';
+              uploadForm.submit();
           }
-  
-          const formData = new FormData();
-          formData.append("file", fileInput.files[0]); // Attach file properly
-  
-          loadingBar.style.display = 'block'; // Show loading animation
-  
-          fetch("/", {
-              method: "POST",
-              body: formData
-          })
-          .then(response => response.text()) // Get response as text
-          .then(data => {
-              loadingBar.style.display = 'none'; // Hide loading bar
-              document.body.innerHTML = data; // Show response
-          })
-          .catch(error => {
-              console.error("Upload error:", error);
-              loadingBar.style.display = 'none';
-          });
       });
-  </script>
+    </script>
 
 </body>
 </html>

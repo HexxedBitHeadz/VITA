@@ -7,17 +7,85 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
-    body { font-family: 'Courier New', Courier, monospace; background-color: #0d0d0d; color: #e6e6e6; margin: 0; padding: 20px; }
-    h1 { color: #E41C38; text-align: center; text-transform: uppercase; }
-    .logo { text-align: center; margin-bottom: 20px; }
-    .logo img { max-width: 150px; opacity: 0.9; filter: drop-shadow(0 0 10px #E41C38) drop-shadow(0 0 5px #E41C38); transition: all 0.3s ease; }
-    .logo img:hover { opacity: 1; filter: drop-shadow(0 0 15px #E41C38) drop-shadow(0 0 20px #E41C38); }
-    .section-header { background-color: #E41C38; color: black; padding: 10px; cursor: pointer; text-transform: uppercase; text-align: center; font-weight: bold; border-radius: 5px; margin-bottom: 10px; }
-    .collapsible-content { display: block; background-color: #1a1a1a; padding: 20px; margin-bottom: 20px; border-radius: 5px; box-shadow: 0 4px 8px rgba(255, 0, 77, 0.5); }
-    .collapsible-content pre { background-color: #262626; padding: 15px; border-left: 5px solid #E41C38; white-space: pre-wrap; overflow-x: auto; border-radius: 8px; font-size: 14px; }
-    .button-container { text-align: center; margin-top: 20px; }
-    .button { background-color: #E41C38; color: black; border: none; padding: 10px 20px; font-size: 16px; text-transform: uppercase; cursor: pointer; border-radius: 5px; margin: 5px; transition: background-color 0.3s ease; }
-    .button:hover { background-color: #ff4d4d; }
+    body {
+      font-family: 'Courier New', Courier, monospace;
+      background-color: #0d0d0d;
+      color: #e6e6e6;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      color: #E41C38;
+      text-align: center;
+      text-transform: uppercase;
+    }
+    .logo {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .logo img {
+      max-width: 150px;
+      opacity: 0.9;
+      filter: drop-shadow(0 0 10px #E41C38) drop-shadow(0 0 5px #E41C38);
+      transition: all 0.3s ease;
+    }
+    .logo img:hover {
+      opacity: 1;
+      filter: drop-shadow(0 0 15px #E41C38) drop-shadow(0 0 20px #E41C38);
+    }
+    .results-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .section-header {
+      background-color: #E41C38;
+      color: black;
+      padding: 10px;
+      cursor: pointer;
+      text-transform: uppercase;
+      text-align: center;
+      font-weight: bold;
+      border-radius: 5px;
+      margin-bottom: 10px;
+    }
+    .collapsible-content {
+      display: block;
+      background-color: #1a1a1a;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 5px;
+      box-shadow: 0 4px 8px rgba(255, 0, 77, 0.5);
+      text-align: center; /* Center the text */
+    }
+    .collapsible-content pre {
+      background-color: #262626;
+      padding: 15px;
+      border-left: 5px solid #E41C38;
+      white-space: pre-wrap;
+      overflow-x: auto;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .button-container {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .button {
+      background-color: #E41C38;
+      color: black;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 5px;
+      margin: 5px;
+      transition: background-color 0.3s ease;
+    }
+    .button:hover {
+      background-color: #ff4d4d;
+    }
   </style>
 </head>
 <body>
@@ -28,58 +96,60 @@
 
   <h1>Scan Results</h1>
 
-  <div class="section-header" onclick="toggleSection('clamav')">ClamAV Results</div>
-  <div id="clamav" class="collapsible-content">
-      <pre>{{ clamav_result }}</pre>
+  <div class="results-container">
+
+    <div class="section-header" onclick="toggleSection('clamav')">ClamAV Results</div>
+    <div id="clamav" class="collapsible-content">
+        <pre>{{ clamav_result }}</pre>
+    </div>
+
+    <div class="section-header" onclick="toggleSection('yara')">YARA Results</div>
+    <div id="yara" class="collapsible-content">
+        <pre>
+        {% for match in yara_result %}
+        - {{ match }}
+        {% endfor %}
+        </pre>
+    </div>
+
+    <div class="section-header" onclick="toggleSection('capa')">CAPA Results</div>
+    <div id="capa" class="collapsible-content">
+        <pre>{{ capa_result }}</pre>
+    </div>
+
+    <div class="section-header" onclick="toggleSection('oletools')">OLETools Results</div>
+    <div id="oletools" class="collapsible-content">
+        <pre>{{ oletools_result }}</pre>
+    </div>
+
+    {% if macro_graph_path %}
+    <div class="section-header" onclick="toggleSection('macrograph')">Macro Execution Flow</div>
+    <div id="macrograph" class="collapsible-content">
+        <img src="{{ macro_graph_path }}" alt="Macro Execution Graph">
+    </div>
+    {% endif %}
+
+    <div class="section-header" onclick="toggleSection('payloads')">Extracted Payloads</div>
+    <div id="payloads" class="collapsible-content">
+        <pre>
+        {% for payload in extracted_payloads %}
+        {{ payload }}
+        {% endfor %}
+        </pre>
+    </div>
+
+    <div class="button-container">
+      <button id="downloadPdfBtn" class="button">Download PDF Report</button>
+      <button id="scanNewFileBtn" class="button">Scan New File</button>
+    </div>
+
   </div>
 
-  <div class="section-header" onclick="toggleSection('yara')">YARA Results</div>
-  <div id="yara" class="collapsible-content">
-      <pre>
-      {% for match in yara_result %}
-      - {{ match }}
-      {% endfor %}
-      </pre>
-  </div>
-
-  <div class="section-header" onclick="toggleSection('capa')">CAPA Results</div>
-  <div id="capa" class="collapsible-content">
-      <pre>{{ capa_result }}</pre>
-  </div>
-
-  <div class="section-header" onclick="toggleSection('oletools')">OLETools Results</div>
-  <div id="oletools" class="collapsible-content">
-      <pre>{{ oletools_result }}</pre>
-  </div>
-
-  {% if macro_graph_path %}
-  <div class="section-header" onclick="toggleSection('macrograph')">Macro Execution Flow</div>
-  <div id="macrograph" class="collapsible-content">
-      <img src="{{ macro_graph_path }}" alt="Macro Execution Graph">
-  </div>
-  {% endif %}
-
-  <div class="section-header" onclick="toggleSection('payloads')">Extracted Payloads</div>
-  <div id="payloads" class="collapsible-content">
-      <pre>
-      {% for payload in extracted_payloads %}
-      {{ payload }}
-      {% endfor %}
-      </pre>
-  </div>
-
-  <div class="button-container">
-    <button id="downloadPdfBtn" class="button">Download PDF Report</button>
-    <button id="scanNewFileBtn" class="button">Scan New File</button>
-  </div>
-
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const downloadButton = document.getElementById("downloadPdfBtn");
-    const scanNewFileButton = document.getElementById("scanNewFileBtn");
-
-    if (downloadButton) downloadButton.addEventListener("click", downloadReport);
-    if (scanNewFileButton) scanNewFileButton.addEventListener("click", () => window.location.href = '/');
+  <script>
+    function scanNewFile() {
+      console.log("Redirecting to upload page...");
+      window.location.replace('/');
+    }
 
     function toggleSection(sectionId) {
       const content = document.getElementById(sectionId);
@@ -106,8 +176,15 @@
         });
       }, 1000);
     }
-  });
-</script>
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const downloadButton = document.getElementById("downloadPdfBtn");
+      const scanNewFileButton = document.getElementById("scanNewFileBtn");
+
+      if (downloadButton) downloadButton.addEventListener("click", downloadReport);
+      if (scanNewFileButton) scanNewFileButton.addEventListener("click", scanNewFile);
+    });
+  </script>
 
 </body>
 </html>

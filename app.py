@@ -6,7 +6,7 @@ from oletools.oleid import OleID
 import networkx as nx, matplotlib.pyplot as plt, yara, subprocess, os, shutil, threading, re, base64, time, uuid, oletools.mraptor
 
 app = Flask(__name__)
-UPLOAD_FOLDER = '/app/uploads'
+UPLOAD_FOLDER = '/home/kali/Desktop/VITA/uploads'
 RULES_FOLDER = '/app/yara-rules/packages/full/'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -14,11 +14,13 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 def load_yara_rules():
     rule_files = {}
     for root, _, files in os.walk(RULES_FOLDER):
+        print(f"Scanning directory: {root}")
         for file in files:
+            print(f"Found file: {file}")
             if file.endswith('.yar') or file.endswith('.yara'):
                 rule_path = os.path.join(root, file)
                 rule_files[file] = rule_path
-    print(f"Loaded {len(rule_files)} YARA rules: {list(rule_files.keys())}")
+    print(f"Total YARA rules loaded: {len(rule_files)}")
     return yara.compile(filepaths=rule_files) if rule_files else None
 
 try:
@@ -95,7 +97,10 @@ def handle_upload():
 
     filename = file.filename
     filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-    file.save(filepath)
+    try:
+        file.save(filepath)
+    except Exception as e:
+        return f"Error saving file: {e}", 500
 
     clamav_result = subprocess.getoutput(f"clamscan {filepath}")
     yara_result = []
@@ -111,7 +116,7 @@ def handle_upload():
 
     extracted_payloads = oletools_result.get("extracted_payloads", []) if oletools_result else []
 
-    macro_graph_path = f"/app/static/{uuid.uuid4()}_macro_graph.png"
+    macro_graph_path = f"/home/kali/Desktop/VITA/static/{uuid.uuid4()}_macro_graph.png"
     if oletools_result and "vba_macros" in oletools_result:
         generate_macro_graph(oletools_result["vba_macros"], macro_graph_path)
 
