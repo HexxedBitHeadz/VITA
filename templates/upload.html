@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cyberpunk File Scanner</title>
+    <title>Hexxed BitHeadz Vita</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap">
     <style>
         body {
@@ -53,6 +53,13 @@
             background-color: #2a2a2a;
             border-color: #ff4d4d;
             box-shadow: 0 0 10px #E41C38;
+        }
+
+        .upload-box.disabled {
+            pointer-events: none;
+            opacity: 0.5;
+            filter: grayscale(100%);
+            cursor: not-allowed;
         }
 
         input[type="file"] {
@@ -121,7 +128,7 @@
     <div class="logo">
         <img src="static/HexxedBitHeadz-Logo.png" alt="HexxedBitHeadz Logo">
     </div>
-    <h1>File Scanner</h1>
+    <h1>V.I.T.A.</h1>
     <div class="upload-container">
 
     <form id="uploadForm" action="/" method="post" enctype="multipart/form-data">
@@ -145,22 +152,32 @@
       const loadingBar = document.getElementById('loading-bar');
       const uploadForm = document.getElementById('uploadForm');
 
+      function disableUpload() {
+          dropArea.classList.add('disabled');
+          fileInput.disabled = true;
+      }
+
       ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
           dropArea.addEventListener(eventName, (e) => e.preventDefault(), false);
           document.body.addEventListener(eventName, (e) => e.preventDefault(), false);
       });
 
       dropArea.addEventListener('dragover', () => {
-          dropArea.style.backgroundColor = "#2a2a2a";
+          if (!dropArea.classList.contains('disabled')) {
+              dropArea.style.backgroundColor = "#2a2a2a";
+          }
       });
 
       dropArea.addEventListener('dragleave', () => {
-          dropArea.style.backgroundColor = "#1a1a1a";
+          if (!dropArea.classList.contains('disabled')) {
+              dropArea.style.backgroundColor = "#1a1a1a";
+          }
       });
 
       dropArea.addEventListener('drop', (e) => {
           e.preventDefault();
-          if (e.dataTransfer.files.length > 0) {
+          if (!dropArea.classList.contains('disabled') && e.dataTransfer.files.length > 0) {
+              disableUpload();
               const file = e.dataTransfer.files[0];
               const formData = new FormData();
               formData.append("file", file);
@@ -177,16 +194,19 @@
                   document.write(data);
                   document.close();
               })
-              .catch(error => console.error("Upload error:", error))
-              .finally(() => {
-                  loadingBar.style.display = 'none';
-              });
+              .catch(error => console.error("Upload error:", error));
           }
       });
 
-      dropArea.addEventListener('click', () => fileInput.click());
+      dropArea.addEventListener('click', () => {
+          if (!dropArea.classList.contains('disabled')) {
+              fileInput.click();
+          }
+      });
+
       fileInput.addEventListener('change', () => {
           if (fileInput.files.length > 0) {
+              disableUpload();
               loadingBar.style.display = 'block';
               uploadForm.submit();
           }
