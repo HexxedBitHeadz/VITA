@@ -56,7 +56,7 @@
       margin-bottom: 20px;
       border-radius: 5px;
       box-shadow: 0 4px 8px rgba(255, 0, 77, 0.5);
-      text-align: center; /* Center the text */
+      text-align: center;
     }
     .collapsible-content pre {
       background-color: #262626;
@@ -94,15 +94,22 @@
     <img src="{{ url_for('static', filename='HexxedBitHeadz-Logo.png') }}" alt="Hexxed BitHeadz Logo">
   </div>
 
+  <script>
+    const uploadedFilename = "{{ filename }}";
+  </script>
+
   <h1>Scan Results</h1>
 
   <div class="results-container">
 
+    {% if clamav_result %}
     <div class="section-header" onclick="toggleSection('clamav')">ClamAV Results</div>
     <div id="clamav" class="collapsible-content">
         <pre>{{ clamav_result }}</pre>
     </div>
-
+    {% endif %}
+    
+    {% if yara_result %}
     <div class="section-header" onclick="toggleSection('yara')">YARA Results</div>
     <div id="yara" class="collapsible-content">
         <pre>
@@ -111,32 +118,127 @@
         {% endfor %}
         </pre>
     </div>
-
+    {% endif %}
+    
+    {% if capa_result %}
     <div class="section-header" onclick="toggleSection('capa')">CAPA Results</div>
     <div id="capa" class="collapsible-content">
-        <pre>{{ capa_result }}</pre>
-    </div>
-
-    <div class="section-header" onclick="toggleSection('oletools')">OLETools Results</div>
-    <div id="oletools" class="collapsible-content">
-        <pre>{{ oletools_result }}</pre>
-    </div>
-
-    {% if macro_graph_path %}
-    <div class="section-header" onclick="toggleSection('macrograph')">Macro Execution Flow</div>
-    <div id="macrograph" class="collapsible-content">
-        <img src="{{ macro_graph_path }}" alt="Macro Execution Graph">
+    
+      {% if capa_result.get("attack_techniques") %}
+      <h3>ATT&CK Techniques</h3>
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+        <thead>
+          <tr>
+            <th style="border: 1px solid #E41C38; padding: 8px;">Tactic</th>
+            <th style="border: 1px solid #E41C38; padding: 8px;">Techniques</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for tactic, techniques in capa_result["attack_techniques"].items() %}
+          <tr>
+            <td style="border: 1px solid #E41C38; padding: 8px;">{{ tactic }}</td>
+            <td style="border: 1px solid #E41C38; padding: 8px;">
+              {% for technique in techniques %}
+                {{ technique["name"] }} [{{ technique["id"] }}]<br>
+              {% endfor %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
+    
+      <h3>Capabilities</h3>
+      <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr>
+            <th style="border: 1px solid #E41C38; padding: 8px;">Capability</th>
+            <th style="border: 1px solid #E41C38; padding: 8px;">Namespace</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for rule in capa_result.get("rules", {}).values() %}
+          <tr>
+            <td style="border: 1px solid #E41C38; padding: 8px;">{{ rule["meta"].get("name") }}</td>
+            <td style="border: 1px solid #E41C38; padding: 8px;">{{ rule["meta"].get("namespace") }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    
     </div>
     {% endif %}
-
-    <div class="section-header" onclick="toggleSection('payloads')">Extracted Payloads</div>
-    <div id="payloads" class="collapsible-content">
-        <pre>
-        {% for payload in extracted_payloads %}
-        {{ payload }}
-        {% endfor %}
-        </pre>
+        
+    {% if oletools_result %}
+    <div class="section-header" onclick="toggleSection('oletools')">OLETools Results</div>
+    <div id="oletools" class="collapsible-content">
+    
+      <h3>OLEID Indicators</h3>
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+        <thead>
+          <tr>
+            <th style="border: 1px solid #E41C38; padding: 8px;">Indicator</th>
+            <th style="border: 1px solid #E41C38; padding: 8px;">Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for key, value in oletools_result.get("oleid", {}).items() %}
+          <tr>
+            <td style="border: 1px solid #E41C38; padding: 8px;">{{ key }}</td>
+            <td style="border: 1px solid #E41C38; padding: 8px;">{{ value }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    
+      <h3>Macro Analysis</h3>
+      <p><strong>Dangerous Macros Detected:</strong> {{ oletools_result.get("macro_dangerous") }}</p>
+    
+      {% if oletools_result.get("vba_macros") %}
+      <h3>VBA Macros</h3>
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+        <thead>
+          <tr>
+            <th style="border: 1px solid #E41C38; padding: 8px;">Filename</th>
+            <th style="border: 1px solid #E41C38; padding: 8px;">Stream Path</th>
+            <th style="border: 1px solid #E41C38; padding: 8px;">VBA Filename</th>
+            <th style="border: 1px solid #E41C38; padding: 8px;">Code Snippet</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for macro in oletools_result["vba_macros"] %}
+          <tr>
+            <td style="border: 1px solid #E41C38; padding: 8px;">{{ macro["filename"] }}</td>
+            <td style="border: 1px solid #E41C38; padding: 8px;">{{ macro["stream_path"] }}</td>
+            <td style="border: 1px solid #E41C38; padding: 8px;">{{ macro["vba_filename"] }}</td>
+            <td style="border: 1px solid #E41C38; padding: 8px; white-space: pre-wrap;">{{ macro["vba_code_snippet"][:500] }}{% if macro["vba_code_snippet"]|length > 500 %}...{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
+    
+      {% if oletools_result.get("windows_api_calls") %}
+      <h3>Windows API Calls</h3>
+      <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr>
+            <th style="border: 1px solid #E41C38; padding: 8px;">API Call</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for api_call in oletools_result["windows_api_calls"] %}
+          <tr>
+            <td style="border: 1px solid #E41C38; padding: 8px;">{{ api_call }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
+    
     </div>
+    {% endif %}
+    
 
     <div class="button-container">
       <button id="downloadPdfBtn" class="button">Download PDF Report</button>
@@ -147,7 +249,6 @@
 
   <script>
     function scanNewFile() {
-      console.log("Redirecting to upload page...");
       window.location.replace('/');
     }
 
@@ -158,10 +259,6 @@
 
     function downloadReport() {
       setTimeout(() => {
-        if (!window.jspdf || !window.html2canvas) {
-          alert("Error: PDF libraries not loaded. Try again in a few seconds.");
-          return;
-        }
         const { jsPDF } = window.jspdf;
         html2canvas(document.body, { scale: 2 }).then(canvas => {
           const pdf = new jsPDF('p', 'mm', 'a4');
@@ -169,20 +266,15 @@
           const pdfWidth = pdf.internal.pageSize.getWidth();
           const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
           pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-          pdf.save('scan_results.pdf');
-        }).catch(error => {
-          console.error('Error generating PDF:', error);
-          alert("An error occurred while generating the PDF.");
+          const sanitizedFilename = uploadedFilename.replace(/\.[^/.]+$/, "");
+          pdf.save(`${sanitizedFilename}_scan_results.pdf`);
         });
       }, 1000);
     }
 
-    document.addEventListener("DOMContentLoaded", function () {
-      const downloadButton = document.getElementById("downloadPdfBtn");
-      const scanNewFileButton = document.getElementById("scanNewFileBtn");
-
-      if (downloadButton) downloadButton.addEventListener("click", downloadReport);
-      if (scanNewFileButton) scanNewFileButton.addEventListener("click", scanNewFile);
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("downloadPdfBtn").onclick = downloadReport;
+      document.getElementById("scanNewFileBtn").onclick = scanNewFile;
     });
   </script>
 
