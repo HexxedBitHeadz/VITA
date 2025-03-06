@@ -4,8 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Scan Results</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
   <style>
     body {
       font-family: 'Courier New', Courier, monospace;
@@ -168,7 +167,7 @@
     
     </div>
     {% endif %}
-        
+              
     {% if oletools_result %}
     <div class="section-header" onclick="toggleSection('oletools')">OLETools Results</div>
     <div id="oletools" class="collapsible-content">
@@ -240,6 +239,7 @@
     {% endif %}
     
 
+
     <div class="button-container">
       <button id="downloadPdfBtn" class="button">Download PDF Report</button>
       <button id="scanNewFileBtn" class="button">Scan New File</button>
@@ -258,18 +258,18 @@
     }
 
     function downloadReport() {
-      setTimeout(() => {
-        const { jsPDF } = window.jspdf;
-        html2canvas(document.body, { scale: 2 }).then(canvas => {
-          const pdf = new jsPDF('p', 'mm', 'a4');
-          const imgData = canvas.toDataURL('image/png');
-          const pdfWidth = pdf.internal.pageSize.getWidth();
-          const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-          pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-          const sanitizedFilename = uploadedFilename.replace(/\.[^/.]+$/, "");
-          pdf.save(`${sanitizedFilename}_scan_results.pdf`);
-        });
-      }, 1000);
+      const element = document.querySelector('.results-container');
+      const sanitizedFilename = uploadedFilename.replace(/\.[^/.]+$/, "");
+
+      const opt = {
+        margin: 0.5,
+        filename: `${sanitizedFilename}_scan_results.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, scrollY: 0 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+
+      html2pdf().set(opt).from(element).save();
     }
 
     document.addEventListener("DOMContentLoaded", () => {
