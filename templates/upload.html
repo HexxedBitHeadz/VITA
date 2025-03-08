@@ -146,72 +146,81 @@
         <div class="loading-bar"></div>
     </div>
     
+
     <script>
-      const dropArea = document.getElementById('drop-area');
-      const fileInput = document.getElementById('fileInput');
-      const loadingBar = document.getElementById('loading-bar');
-      const uploadForm = document.getElementById('uploadForm');
+        const dropArea = document.getElementById('drop-area');
+        const fileInput = document.getElementById('fileInput');
+        const loadingBar = document.getElementById('loading-bar');
+        const uploadForm = document.getElementById('uploadForm');
+      
+        function disableUpload() {
+            dropArea.classList.add('disabled');
+            fileInput.disabled = true;
+        }
+      
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, (e) => e.preventDefault(), false);
+            document.body.addEventListener(eventName, (e) => e.preventDefault(), false);
+        });
+      
+        dropArea.addEventListener('dragover', () => {
+            if (!dropArea.classList.contains('disabled')) {
+                dropArea.style.backgroundColor = "#2a2a2a";
+            }
+        });
+      
+        dropArea.addEventListener('dragleave', () => {
+            if (!dropArea.classList.contains('disabled')) {
+                dropArea.style.backgroundColor = "#1a1a1a";
+            }
+        });
+      
+        dropArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            if (!dropArea.classList.contains('disabled') && e.dataTransfer.files.length > 0) {
+                disableUpload();
+                const file = e.dataTransfer.files[0];
+                uploadFile(file);
+            }
+        });
+      
+        dropArea.addEventListener('click', () => {
+            if (!dropArea.classList.contains('disabled')) {
+                fileInput.click();
+            }
+        });
+      
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                disableUpload();
+                const file = fileInput.files[0];
+                uploadFile(file);
+            }
+        });
+      
+        function uploadFile(file) {
+            loadingBar.style.display = 'block';
+            const formData = new FormData();
+            formData.append("file", file);
+      
+            fetch("/", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.text())
+            .then(data => {
+                document.open();
+                document.write(data);
+                document.close();
+            })
+            .catch(error => console.error("Upload error:", error));
+        }
+      </script>
+      
 
-      function disableUpload() {
-          dropArea.classList.add('disabled');
-          fileInput.disabled = true;
-      }
 
-      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-          dropArea.addEventListener(eventName, (e) => e.preventDefault(), false);
-          document.body.addEventListener(eventName, (e) => e.preventDefault(), false);
-      });
 
-      dropArea.addEventListener('dragover', () => {
-          if (!dropArea.classList.contains('disabled')) {
-              dropArea.style.backgroundColor = "#2a2a2a";
-          }
-      });
 
-      dropArea.addEventListener('dragleave', () => {
-          if (!dropArea.classList.contains('disabled')) {
-              dropArea.style.backgroundColor = "#1a1a1a";
-          }
-      });
-
-      dropArea.addEventListener('drop', (e) => {
-          e.preventDefault();
-          if (!dropArea.classList.contains('disabled') && e.dataTransfer.files.length > 0) {
-              disableUpload();
-              const file = e.dataTransfer.files[0];
-              const formData = new FormData();
-              formData.append("file", file);
-
-              loadingBar.style.display = 'block';
-
-              fetch("/", {
-                  method: "POST",
-                  body: formData
-              })
-              .then(response => response.text())
-              .then(data => {
-                  document.open();
-                  document.write(data);
-                  document.close();
-              })
-              .catch(error => console.error("Upload error:", error));
-          }
-      });
-
-      dropArea.addEventListener('click', () => {
-          if (!dropArea.classList.contains('disabled')) {
-              fileInput.click();
-          }
-      });
-
-      fileInput.addEventListener('change', () => {
-          if (fileInput.files.length > 0) {
-              disableUpload();
-              loadingBar.style.display = 'block';
-              uploadForm.submit();
-          }
-      });
-    </script>
 
 </body>
 </html>
