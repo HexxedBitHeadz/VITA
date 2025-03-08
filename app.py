@@ -63,14 +63,10 @@ def analyze_office_file(filepath):
 
 
 def run_capa(filepath):
-    capa_command = f"capa --json {filepath}"
+    """Run CAPA on the uploaded file and return raw output as a string."""
+    capa_command = f"capa {filepath}"
     capa_output = subprocess.getoutput(capa_command)
-    try:
-        data = json.loads(capa_output)
-        data.pop("analysis", None)
-        return data
-    except json.JSONDecodeError:
-        return None
+    return capa_output
 
 @app.route("/")
 def upload():
