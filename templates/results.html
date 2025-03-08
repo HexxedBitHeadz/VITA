@@ -23,21 +23,21 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      table-layout: fixed; /* Ensures equal column width */
+      table-layout: fixed; 
     }
 
     th, td {
       border: 1px solid #E41C38;
       padding: 8px;
       text-align: left;
-      white-space: normal; /* Allows text wrapping */
-      word-wrap: break-word; /* Ensures long words wrap correctly */
+      white-space: normal;
+      word-wrap: break-word; 
       overflow: hidden;
     }
 
     pre {
-      white-space: pre-wrap; /* Wraps text inside <pre> tags */
-      word-wrap: break-word; /* Ensures long words wrap */
+      white-space: pre-wrap;
+      word-wrap: break-word;
     }
 
     thead th {
@@ -47,12 +47,20 @@
 
     @media print {
       body {
-        zoom: 75%; /* Reduces scale for PDF export */
+        zoom: 75%;
       }
       table {
         max-width: 100%;
       }
     }
+
+    @media print {
+      .collapsible-content {
+          display: block !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+      }
+  }
 
     .logo {
       text-align: center;
@@ -274,25 +282,34 @@
     }
 
     function downloadReport() {
-      const element = document.querySelector('.results-container');
-      const sanitizedFilename = uploadedFilename.replace(/\.[^/.]+$/, "");
+        const element = document.querySelector('.results-container');
+        const sanitizedFilename = uploadedFilename.replace(/\.[^/.]+$/, "");
 
-      const opt = {
-          margin: 0.5,
-          filename: `${sanitizedFilename}_scan_results.pdf`,
-          image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { 
-              scale: 2, 
-              scrollY: 0, 
-              useCORS: true, 
-              letterRendering: true 
-          },
-          jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-      };
+        // Expand all collapsible sections
+        document.querySelectorAll('.collapsible-content').forEach(el => el.style.display = 'block');
 
-        html2pdf().set(opt).from(element).save();
+        // Delay before capturing to allow all elements to fully render
+        setTimeout(() => {
+            const opt = {
+                margin: 0.5,
+                filename: `${sanitizedFilename}_scan_results.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { 
+                    scale: 2, 
+                    scrollY: 0, 
+                    useCORS: true, 
+                    letterRendering: true 
+                },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                // Restore original collapsed state after generating the PDF
+                document.querySelectorAll('.collapsible-content').forEach(el => el.style.display = '');
+            });
+
+        }, 1000); // 1 second delay to ensure full rendering
     }
-
     document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("downloadPdfBtn").onclick = downloadReport;
       document.getElementById("scanNewFileBtn").onclick = scanNewFile;
