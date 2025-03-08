@@ -18,6 +18,42 @@
       text-align: center;
       text-transform: uppercase;
     }
+
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed; /* Ensures equal column width */
+    }
+
+    th, td {
+      border: 1px solid #E41C38;
+      padding: 8px;
+      text-align: left;
+      white-space: normal; /* Allows text wrapping */
+      word-wrap: break-word; /* Ensures long words wrap correctly */
+      overflow: hidden;
+    }
+
+    pre {
+      white-space: pre-wrap; /* Wraps text inside <pre> tags */
+      word-wrap: break-word; /* Ensures long words wrap */
+    }
+
+    thead th {
+      background-color: #E41C38;
+      color: black;
+    }
+
+    @media print {
+      body {
+        zoom: 75%; /* Reduces scale for PDF export */
+      }
+      table {
+        max-width: 100%;
+      }
+    }
+
     .logo {
       text-align: center;
       margin-bottom: 20px;
@@ -85,6 +121,7 @@
     .button:hover {
       background-color: #ff4d4d;
     }
+    
   </style>
 </head>
 <body>
@@ -119,55 +156,36 @@
     </div>
     {% endif %}
     
-    {% if capa_result %}
+    {% if capa_result and "md5" in capa_result %}
     <div class="section-header" onclick="toggleSection('capa')">CAPA Results</div>
     <div id="capa" class="collapsible-content">
     
-      {% if capa_result.get("attack_techniques") %}
-      <h3>ATT&CK Techniques</h3>
-      <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-        <thead>
-          <tr>
-            <th style="border: 1px solid #E41C38; padding: 8px;">Tactic</th>
-            <th style="border: 1px solid #E41C38; padding: 8px;">Techniques</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for tactic, techniques in capa_result["attack_techniques"].items() %}
-          <tr>
-            <td style="border: 1px solid #E41C38; padding: 8px;">{{ tactic }}</td>
-            <td style="border: 1px solid #E41C38; padding: 8px;">
-              {% for technique in techniques %}
-                {{ technique["name"] }} [{{ technique["id"] }}]<br>
-              {% endfor %}
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      {% endif %}
-    
-      <h3>Capabilities</h3>
+      <h3>File Information</h3>
       <table style="width: 100%; border-collapse: collapse;">
         <thead>
           <tr>
-            <th style="border: 1px solid #E41C38; padding: 8px;">Capability</th>
-            <th style="border: 1px solid #E41C38; padding: 8px;">Namespace</th>
+            <th style="border: 1px solid #E41C38; padding: 8px;">Property</th>
+            <th style="border: 1px solid #E41C38; padding: 8px;">Value</th>
           </tr>
         </thead>
         <tbody>
-          {% for rule in capa_result.get("rules", {}).values() %}
+          {% for line in capa_result.split('\n') if '│' in line and '─' not in line %}
+          {% set parts = line.split('│')[1:-1] %}
+          {% if parts|length == 2 %}
           <tr>
-            <td style="border: 1px solid #E41C38; padding: 8px;">{{ rule["meta"].get("name") }}</td>
-            <td style="border: 1px solid #E41C38; padding: 8px;">{{ rule["meta"].get("namespace") }}</td>
+            <td style="border: 1px solid #E41C38; padding: 8px;">{{ parts[0].strip() }}</td>
+            <td style="border: 1px solid #E41C38; padding: 8px;">{{ parts[1].strip() }}</td>
           </tr>
+          {% endif %}
           {% endfor %}
         </tbody>
       </table>
     
     </div>
     {% endif %}
-              
+        
+    </div>
+      
     {% if oletools_result %}
     <div class="section-header" onclick="toggleSection('oletools')">OLETools Results</div>
     <div id="oletools" class="collapsible-content">
@@ -238,8 +256,6 @@
     </div>
     {% endif %}
     
-
-
     <div class="button-container">
       <button id="downloadPdfBtn" class="button">Download PDF Report</button>
       <button id="scanNewFileBtn" class="button">Scan New File</button>
@@ -262,14 +278,19 @@
       const sanitizedFilename = uploadedFilename.replace(/\.[^/.]+$/, "");
 
       const opt = {
-        margin: 0.5,
-        filename: `${sanitizedFilename}_scan_results.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, scrollY: 0 },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+          margin: 0.5,
+          filename: `${sanitizedFilename}_scan_results.pdf`,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { 
+              scale: 2, 
+              scrollY: 0, 
+              useCORS: true, 
+              letterRendering: true 
+          },
+          jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
       };
 
-      html2pdf().set(opt).from(element).save();
+        html2pdf().set(opt).from(element).save();
     }
 
     document.addEventListener("DOMContentLoaded", () => {
